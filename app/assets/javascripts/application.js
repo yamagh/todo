@@ -15,3 +15,10 @@
 //= require twitter/bootstrap
 //= require turbolinks
 //= require_tree .
+
+$(document).ready(function(){
+  $("input[type=checkbox]").click(function(){
+    $.post("tasks/" + $(this).data("id") + "/toggle/");
+  });
+});
+

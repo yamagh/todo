@@ -1,10 +1,13 @@
 class TasksController < ApplicationController
-  before_action :set_task, only: [:show, :edit, :update, :destroy]
+  before_action :set_task, only: [:show, :edit, :update, :destroy, :toggle]
+  before_action :authenticate_user!, only: [:index]
 
   # GET /tasks
   # GET /tasks.json
   def index
-    @tasks = Task.all
+    @task = Task.new
+    #@tasks = Task.all
+    @tasks = Task.where("user_id = ?", current_user.id)
   end
 
   # GET /tasks/1
@@ -24,14 +27,17 @@ class TasksController < ApplicationController
   # POST /tasks
   # POST /tasks.json
   def create
-    @task = Task.new(task_params)
+    @task = Task.new(task_title)
+    @task.done = false
+    @task.done_at = nil
+    @task.user_id = current_user.id
 
     respond_to do |format|
       if @task.save
-        format.html { redirect_to @task, notice: 'Task was successfully created.' }
+        format.html { redirect_to tasks_path, notice: 'タスクを追加しました' }
         format.json { render :show, status: :created, location: @task }
       else
-        format.html { render :new }
+        format.html { redirect_to tasks_path, alert: 'タスクの追加に失敗しました' }
         format.json { render json: @task.errors, status: :unprocessable_entity }
       end
     end
@@ -61,6 +67,12 @@ class TasksController < ApplicationController
     end
   end
 
+  def toggle
+    @task.done = !@task.done
+    @task.done_at = @task.done ? Time.now : nil
+    @task.save
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_task
@@ -69,6 +81,10 @@ class TasksController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def task_params
-      params.require(:task).permit(:title, :done, :done_at, :user_id)
+      params.require(:task).permit(:title, :done, :done_at)
+    end
+
+    def task_title
+      params.require(:task).permit(:title)
     end
 end
